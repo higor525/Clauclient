@@ -1,3 +1,4 @@
+
 package com.clauclient;
 
 import net.minecraft.client.Minecraft;
@@ -8,6 +9,7 @@ import net.minecraft.client.renderer.GlStateManager;
 public abstract class HudModule extends Module {
     public int x, y;
     public final Setting bg = bool("Fundo", true);
+    public final Setting opacity = num("Opacidade do fundo", 0.6, 0.0, 1.0, 0.1);
     public final Setting bar = bool("Barra colorida", true);
     public final Setting barColor = num("Cor da barra", 4, 0, 7, 1);
     public final Setting scale = num("Escala", 1.0, 0.5, 3.0, 0.1);
@@ -31,7 +33,10 @@ public abstract class HudModule extends Module {
     }
 
     protected void drawBackground(int w, int h) {
-        if (bg.bool) Gui.drawRect(0, 0, w, h, 0x90000000);
+        if (bg.bool && opacity.num > 0.01) {
+            int a = (int) (opacity.num * 255);
+            Gui.drawRect(0, 0, w, h, a << 24);
+        }
         if (bar.bool) Gui.drawRect(0, 0, 2, h, 0xFF000000 | Ui.color(barColor.num));
     }
 
