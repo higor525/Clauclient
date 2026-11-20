@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
-    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim;
+    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, chat;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -52,17 +52,30 @@ public class ModuleManager {
             Setting z = num("Zoom", 4, 1.5, 30, 0.5);
         });
 
-        persp = add(new Module("Perspectiva") {});
+        persp = add(new Module("Perspectiva") {
+            Setting hold = bool("Modo Hold", false);
+        });
 
         oldAnim = add(new Module("Old Animations") {
             Setting sneak = bool("Sneak suave", true);
             Setting vel = num("Velocidade do sneak", 8, 1, 30, 1);
-            Setting ix = num("Item X", 0, -1.0, 1.0, 0.05);
-            Setting iy = num("Item Y", 0, -1.0, 1.0, 0.05);
-            Setting iz = num("Item Z", 0, -1.0, 1.0, 0.05);
-            Setting isc = num("Item tamanho", 1.0, 0.3, 1.5, 0.05);
-            Setting bx = num("Bloqueio X", 0, -1.0, 1.0, 0.05);
-            Setting by = num("Bloqueio Y", 0, -1.0, 1.0, 0.05);
+            Setting a1 = bool("1.7 Blockhit", true);
+            Setting a2 = bool("1.7 Sword Animation", true);
+            Setting a3 = bool("1.7 Rod Animation", true);
+            Setting a4 = bool("1.7 Bow Animation", true);
+            Setting a5 = bool("1.7 Eating Animation", true);
+            Setting a6 = bool("1.7 Drinking Animation", true);
+            Setting a7 = bool("1.7 Swing Animation", false);
+            Setting a8 = bool("1.7 Item Held Animation", true);
+            Setting a9 = bool("1.7 Item Update", true);
+            Setting a10 = bool("Left Hand Animation", false);
+            Setting a11 = bool("No Inventory Move", false);
+            Setting b1 = bool("1.7 Damage (breve)", false);
+            Setting b2 = bool("1.7 Hearts (breve)", false);
+            Setting b3 = bool("1.7 Glint (breve)", false);
+            Setting b4 = bool("1.7 Place (breve)", false);
+            Setting b5 = bool("1.7 Build (breve)", false);
+            Setting b6 = bool("1.7 Debug (breve)", false);
         });
 
         crosshair = add(new Module("Crosshair") {
@@ -102,6 +115,17 @@ public class ModuleManager {
                     mc.theWorld.setThunderStrength(0f);
                 }
             }
+        });
+
+        chat = add(new Module("Chat", true) {
+            Setting bg = bool("Fundo", true);
+            Setting op = num("Opacidade do fundo", 0.5, 0.0, 1.0, 0.05);
+            Setting fit = bool("Fundo ajustado ao texto", false);
+            Setting shadow = bool("Sombra do texto", true);
+            Setting size = num("Tamanho", 1.0, 0.5, 2.0, 0.1);
+            Setting secs = num("Tempo na tela (s)", 10, 3, 30, 1);
+            Setting always = bool("Sempre visivel", false);
+            Setting time = bool("Horario", false);
         });
 
         add(new TextHud("FPS", 4, 4) {
