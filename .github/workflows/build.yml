@@ -7,14 +7,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: 8
       - name: Compilar
         run: |
           wget -q https://services.gradle.org/distributions/gradle-2.14.1-bin.zip
           unzip -q gradle-2.14.1-bin.zip
-          ./gradle-2.14.1/bin/gradle setupCIWorkspace build --no-daemon
+          ./gradle-2.14.1/bin/gradle setupCIWorkspace build --no-daemon 2>&1 | tee build.log
+          exit ${PIPESTATUS[0]}
+      - name: Mostrar erros
+        if: failure()
+        run: |
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -E -B1 -A3 "error:|What went wrong" build.log | head -80 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: ClauClient
           path: build/libs/*.jar
