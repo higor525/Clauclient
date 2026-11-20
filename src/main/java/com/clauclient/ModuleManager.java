@@ -39,7 +39,24 @@ public class ModuleManager {
             }
         });
 
-        modules.add(new Module("FPS", true) {});
-        modules.add(new Module("Coordenadas", true) {});
+        modules.add(new HudModule("FPS", 4, 4) {
+            public String getText() {
+                return "FPS: " + Minecraft.getDebugFPS();
+            }
+        });
+
+        modules.add(new HudModule("CPS", 4, 22) {
+            public String getText() {
+                return "CPS: " + Cps.count(Cps.left) + " | " + Cps.count(Cps.right);
+            }
+        });
+
+        modules.add(new HudModule("Coordenadas", 4, 40) {
+            public String getText() {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (mc.thePlayer == null) return "XYZ: -";
+                return String.format("XYZ: %.0f %.0f %.0f", mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+            }
+        });
     }
 }
