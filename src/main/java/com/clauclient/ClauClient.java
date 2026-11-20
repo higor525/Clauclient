@@ -3,11 +3,14 @@ package com.clauclient;
 import java.lang.reflect.Field;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.item.ItemSword;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -141,6 +144,10 @@ public class ClauClient {
             return;
         }
 
+        if (ModuleManager.noPart.enabled && mc.theWorld != null) {
+            mc.effectRenderer.clearEffects(mc.theWorld);
+        }
+
         boolean z = ModuleManager.zoom.enabled && zoomKey.isKeyDown() && mc.currentScreen == null;
         if (z) {
             if (!zooming) {
@@ -185,6 +192,20 @@ public class ClauClient {
             p.rotationPitch = camPitch;
             p.prevRotationPitch = camPitch;
             swapped = true;
+        }
+    }
+
+    @SubscribeEvent
+    public void onHand(RenderHandEvent e) {
+        Module o = ModuleManager.oldAnim;
+        if (!o.enabled) return;
+        EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        GlStateManager.translate((float) o.n("Item X"), (float) o.n("Item Y"), (float) o.n("Item Z"));
+        float sc = (float) o.n("Item tamanho");
+        GlStateManager.scale(sc, sc, sc);
+        if (p.isUsingItem() && p.getHeldItem() != null && p.getHeldItem().getItem() instanceof ItemSword) {
+            GlStateManager.translate((float) o.n("Bloqueio X"), (float) o.n("Bloqueio Y"), 0f);
         }
     }
 
