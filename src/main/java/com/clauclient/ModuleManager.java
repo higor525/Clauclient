@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
-    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion;
+    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -57,6 +57,12 @@ public class ModuleManager {
         oldAnim = add(new Module("Old Animations") {
             Setting sneak = bool("Sneak suave", true);
             Setting vel = num("Velocidade do sneak", 8, 1, 30, 1);
+            Setting ix = num("Item X", 0, -1.0, 1.0, 0.05);
+            Setting iy = num("Item Y", 0, -1.0, 1.0, 0.05);
+            Setting iz = num("Item Z", 0, -1.0, 1.0, 0.05);
+            Setting isc = num("Item tamanho", 1.0, 0.3, 1.5, 0.05);
+            Setting bx = num("Bloqueio X", 0, -1.0, 1.0, 0.05);
+            Setting by = num("Bloqueio Y", 0, -1.0, 1.0, 0.05);
         });
 
         crosshair = add(new Module("Crosshair") {
@@ -75,6 +81,28 @@ public class ModuleManager {
         sidebar.enabled = false;
 
         potion = add(new PotionHud());
+
+        noPart = add(new Module("Sem Particulas") {
+            public void onTick() {
+                Minecraft.getMinecraft().gameSettings.particleSetting = 2;
+            }
+        });
+
+        optim = add(new Module("Otimizacao", true) {
+            Setting shadows = bool("Sem sombra de entidades", true);
+            Setting weather = bool("Sem chuva", true);
+            Setting dist = num("Distancia de render", 5, 2, 16, 1);
+            public void onTick() {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (b("Sem sombra de entidades")) mc.gameSettings.entityShadows = false;
+                int d = (int) n("Distancia de render");
+                if (mc.gameSettings.renderDistanceChunks != d) mc.gameSettings.renderDistanceChunks = d;
+                if (mc.theWorld != null && b("Sem chuva")) {
+                    mc.theWorld.setRainStrength(0f);
+                    mc.theWorld.setThunderStrength(0f);
+                }
+            }
+        });
 
         add(new TextHud("FPS", 4, 4) {
             public String getValue() {
