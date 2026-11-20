@@ -2,6 +2,7 @@ package com.clauclient;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -22,6 +23,15 @@ public class ClauClient {
         menuKey = new KeyBinding("Abrir menu", Keyboard.KEY_K, "ClauClient");
         ClientRegistry.registerKeyBinding(menuKey);
         MinecraftForge.EVENT_BUS.register(this);
+        Config.load();
+    }
+
+    @SubscribeEvent
+    public void onMouse(MouseEvent event) {
+        if (event.buttonstate) {
+            if (event.button == 0) Cps.left.add(System.currentTimeMillis());
+            else if (event.button == 1) Cps.right.add(System.currentTimeMillis());
+        }
     }
 
     @SubscribeEvent
@@ -41,22 +51,18 @@ public class ClauClient {
     @SubscribeEvent
     public void onRender(RenderGameOverlayEvent.Text event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null) return;
+        if (mc.thePlayer == null || mc.currentScreen instanceof HudEditor) return;
 
-        int y = 4;
-        if (ModuleManager.get("FPS").enabled) {
-            mc.fontRendererObj.drawStringWithShadow("FPS: " + Minecraft.getDebugFPS(), 4, y, 0xFFFFFF);
-            y += 10;
-        }
-        if (ModuleManager.get("Coordenadas").enabled) {
-            String xyz = String.format("XYZ: %.0f %.0f %.0f", mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
-            mc.fontRendererObj.drawStringWithShadow(xyz, 4, y, 0xFFFFFF);
+        for (Module m : ModuleManager.modules) {
+            if (m instanceof HudModule && m.enabled) {
+                ((HudModule) m).render();
+            }
         }
 
         int ry = 4;
         int w = event.resolution.getScaledWidth();
         for (Module m : ModuleManager.modules) {
-            if (m.enabled) {
+            if (m.enabled && !(m instanceof HudModule)) {
                 int tw = mc.fontRendererObj.getStringWidth(m.name);
                 mc.fontRendererObj.drawStringWithShadow(m.name, w - tw - 4, ry, 0x55FFFF);
                 ry += 10;
