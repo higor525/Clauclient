@@ -28,6 +28,12 @@ public class ClickGui extends GuiScreen {
                     m.enabled ? 0x55FF55 : 0xFF5555);
             i++;
         }
+
+        int ey = y + ROW * i;
+        boolean hoverEdit = mouseX >= x && mouseX <= x + W && mouseY >= ey && mouseY < ey + ROW;
+        drawRect(x, ey, x + W, ey + ROW, hoverEdit ? 0xFF2A6FBF : 0xFF1E90FF);
+        drawCenteredString(fontRendererObj, "Editar HUD", width / 2, ey + 6, 0xFFFFFF);
+
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -44,8 +50,18 @@ public class ClickGui extends GuiScreen {
                 }
                 i++;
             }
+            int ey = y + ROW * i;
+            if (mouseX >= x && mouseX <= x + W && mouseY >= ey && mouseY < ey + ROW) {
+                mc.displayGuiScreen(new HudEditor());
+                return;
+            }
         }
         super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void onGuiClosed() {
+        Config.save();
     }
 
     @Override
