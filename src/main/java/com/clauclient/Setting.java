@@ -26,7 +26,7 @@ public class Setting {
         if (type == BOOL) return bool ? "ON" : "OFF";
         if (type == NUM) {
             if (step >= 1) return String.valueOf((int) Math.round(num));
-            return String.format("%.1f", num);
+            return String.format("%.2f", num);
         }
         return text;
     }
