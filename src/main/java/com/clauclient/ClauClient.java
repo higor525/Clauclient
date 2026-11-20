@@ -51,6 +51,7 @@ public class ClauClient {
         ClientRegistry.registerKeyBinding(zoomKey);
         ClientRegistry.registerKeyBinding(perspKey);
         MinecraftForge.EVENT_BUS.register(this);
+MinecraftForge.EVENT_BUS.register(new MenuEvents());
         Config.load();
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
