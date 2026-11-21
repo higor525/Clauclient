@@ -5,17 +5,22 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.InventoryEffectRenderer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.item.ItemSword;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -48,6 +53,9 @@ public class ClauClient {
     private boolean clickTried;
 
     private boolean rendererInstalled;
+
+    private Field guiLeftF, xSizeF, effF;
+    private boolean invTried;
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
@@ -135,6 +143,54 @@ public class ClauClient {
         mc.gameSettings.thirdPersonView = savedView;
     }
 
+    private void fixInventory(GuiContainer g) {
+        if (!invTried) {
+            invTried = true;
+            try {
+                guiLeftF = ReflectionHelper.findField(GuiContainer.class, "guiLeft", "field_147003_i");
+            } catch (Exception e) {
+                guiLeftF = null;
+            }
+            try {
+                xSizeF = ReflectionHelper.findField(GuiContainer.class, "xSize", "field_146999_f");
+            } catch (Exception e) {
+                xSizeF = null;
+            }
+            try {
+                effF = ReflectionHelper.findField(InventoryEffectRenderer.class, "hasActivePotionEffects", "field_147045_u");
+            } catch (Exception e) {
+                effF = null;
+            }
+        }
+        try {
+            if (effF != null) effF.setBoolean(g, false);
+            if (guiLeftF != null && xSizeF != null) {
+                guiLeftF.setInt(g, (g.width - xSizeF.getInt(g)) / 2);
+            }
+        } catch (Exception e) {
+            // ignora
+        }
+    }
+
+    @SubscribeEvent
+    public void onGuiDraw(GuiScreenEvent.DrawScreenEvent.Pre e) {
+        Module oa = ModuleManager.oldAnim;
+        if (oa.enabled && oa.b("No Inventory Move") && e.gui instanceof InventoryEffectRenderer) {
+            fixInventory((GuiContainer) e.gui);
+        }
+    }
+
+    @SubscribeEvent
+    public void onLiving(RenderLivingEvent.Pre e) {
+        Module c = ModuleManager.cull;
+        if (!c.enabled) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || e.entity == mc.thePlayer) return;
+        double d = e.entity.getDistanceSqToEntity(mc.thePlayer);
+        double lim = e.entity instanceof EntityArmorStand ? c.n("Distancia armor stand") : c.n("Distancia de entidades");
+        if (d > lim * lim) e.setCanceled(true);
+    }
+
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -157,16 +213,14 @@ public class ClauClient {
         }
 
         Module oa = ModuleManager.oldAnim;
-        if (oa.enabled && oa.b("No Inventory Move") && mc.currentScreen != null && !(mc.currentScreen instanceof GuiChat)) {
-            KeyBinding[] ks = {
-                mc.gameSettings.keyBindForward, mc.gameSettings.keyBindBack,
-                mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindRight,
-                mc.gameSettings.keyBindJump, mc.gameSettings.keyBindSneak,
-                mc.gameSettings.keyBindSprint
-            };
-            for (KeyBinding k : ks) {
-                KeyBinding.setKeyBindState(k.getKeyCode(), false);
-            }
+        EntityPlayerSP pl = mc.thePlayer;
+        if (oa.enabled && oa.b("1.7 Blockhit") && pl != null && mc.currentScreen == null
+                && pl.isUsingItem() && pl.getHeldItem() != null
+                && pl.getHeldItem().getItem() instanceof ItemSword
+                && mc.gameSettings.keyBindAttack.isKeyDown()
+                && !pl.isSwingInProgress) {
+            pl.isSwingInProgress = true;
+            pl.swingProgressInt = -1;
         }
 
         Module pm = ModuleManager.persp;
