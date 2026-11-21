@@ -180,10 +180,14 @@ public class ModuleManager {
             Setting op = num("Opacidade", 0.35, 0.1, 1.0, 0.05);
             Setting pot = bool("Cor da pocao", true);
             Setting fixo = num("Cor fixa", 9, 0, 9, 1);
+            Setting ench = bool("Colorir encantamento", false);
+            Setting er = num("Encantamento R", 60, 0, 255, 5);
+            Setting eg = num("Encantamento G", 200, 0, 255, 5);
+            Setting eb = num("Encantamento B", 255, 0, 255, 5);
         });
 
         shield = add(new Module("Escudo", true) {
-            Setting sc = num("Tamanho", 1.0, 0.5, 2.0, 0.1);
+            Setting sc = num("Tamanho", 1.0, 0.5, 5.0, 0.1);
             Setting oy = num("Posicao Y", 0, -4, 4, 0.5);
             Setting oz = num("Posicao Z", 0, -3, 3, 0.5);
             public void onTick() {
