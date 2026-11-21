@@ -5,7 +5,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.opengl.GL11;
 
 public class Ui {
-    public static final int[] PALETTE = {0xFFFFFF, 0xFF5555, 0x55FF55, 0x5555FF, 0x55FFFF, 0xFFFF55, 0xFF55FF, 0xFFAA00};
+    public static final int[] PALETTE = {0xFFFFFF, 0xFF5555, 0x55FF55, 0x5555FF, 0x55FFFF, 0xFFFF55, 0xFF55FF, 0xFFAA00, 0x000000, 0x9B30FF};
     public static final int ACCENT = 0xFFA66BFF;
 
     public static int color(double i) {
