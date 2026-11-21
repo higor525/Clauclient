@@ -10,28 +10,11 @@ jobs:
           distribution: zulu
           java-version: 8
       - name: Compilar
-        id: compilar
-        continue-on-error: true
         run: |
           wget -q https://services.gradle.org/distributions/gradle-2.14.1-bin.zip
           unzip -q gradle-2.14.1-bin.zip
-          ./gradle-2.14.1/bin/gradle setupCIWorkspace build --no-daemon > build.log 2>&1
-      - name: Separar erros
-        run: |
-          grep -E -A3 "error:" build.log | sed 's#/home/runner/work/Clauclient/Clauclient/build/sources/main/java/com/clauclient/##' | head -60 > erros.txt || true
-          if [ ! -s erros.txt ]; then tail -40 build.log > erros.txt; fi
-          echo "ERROS DO BUILD" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat erros.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          ./gradle-2.14.1/bin/gradle setupCIWorkspace build --no-daemon > build.log 2>&1 || (grep -A3 "error:" build.log | sed 's#/home/runner/work/Clauclient/Clauclient/build/sources/main/java/com/clauclient/##' | head -60 >> $GITHUB_STEP_SUMMARY; exit 1)
       - uses: actions/upload-artifact@v4
-        with:
-          name: erros
-          path: erros.txt
-      - uses: actions/upload-artifact@v4
-        if: steps.compilar.outcome == 'success'
         with:
           name: ClauClient
           path: build/libs/*.jar
-      - name: Falhar se deu erro
-        if: steps.compilar.outcome == 'fail
