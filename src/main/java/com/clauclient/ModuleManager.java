@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
-    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, plus, chat, render, blockOv, nametag, tab;
+    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, chat, blockOv, nametag, tab;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -97,57 +97,6 @@ public class ModuleManager {
         noPart = add(new Module("Sem Particulas") {
             public void onTick() {
                 Minecraft.getMinecraft().gameSettings.particleSetting = 2;
-            }
-        });
-
-        optim = add(new Module("Otimizacao", true) {
-            Setting shadows = bool("Sem sombra de entidades", true);
-            public void onTick() {
-                Minecraft mc = Minecraft.getMinecraft();
-                if (b("Sem sombra de entidades")) mc.gameSettings.entityShadows = false;
-            }
-        });
-
-        plus = add(new Module("Otimizacao Plus", true) {
-            Setting tex = bool("Congelar texturas", true);
-            Setting vs = bool("Vsync desligado", true);
-            Setting dyn = bool("Distancia dinamica", true);
-            Setting tgt = num("FPS alvo", 45, 20, 120, 5);
-            Setting dmin = num("Distancia minima", 3, 2, 8, 1);
-            Setting dmax = num("Distancia maxima", 6, 3, 16, 1);
-            Setting bob = bool("Sem view bobbing", false);
-            Setting mip = bool("Mipmap zero", false);
-
-            public void onTick() {
-                Minecraft mc = Minecraft.getMinecraft();
-                if (b("Congelar texturas")) FpsBoost.freezeTextures(mc);
-                if (b("Vsync desligado")) FpsBoost.vsyncOff(mc);
-                if (b("Sem view bobbing")) mc.gameSettings.viewBobbing = false;
-                if (b("Mipmap zero")) FpsBoost.mipmapZero(mc);
-                if (b("Distancia dinamica")) {
-                    FpsBoost.dynamicDistance(mc, (int) n("Distancia minima"), (int) n("Distancia maxima"), (int) n("FPS alvo"));
-                }
-            }
-        });
-
-        render = add(new Module("Render", true) {
-            Setting fire = bool("Sem fogo na tela", true);
-            Setting gfx = bool("Graficos rapidos", true);
-            Setting menus = bool("FPS baixo em menus", true);
-            Setting lim = num("Limite de FPS", 60, 30, 260, 10);
-            Setting stands = bool("Esconder armor stands", false);
-            Setting mobs = bool("Esconder mobs longe", false);
-            Setting md = num("Distancia de mobs", 24, 8, 64, 4);
-
-            public void onTick() {
-                Minecraft mc = Minecraft.getMinecraft();
-                if (b("Graficos rapidos")) {
-                    mc.gameSettings.fancyGraphics = false;
-                    mc.gameSettings.ambientOcclusion = 0;
-                }
-                int f = (int) n("Limite de FPS");
-                if (b("FPS baixo em menus") && mc.currentScreen != null) f = Math.min(f, 30);
-                mc.gameSettings.limitFramerate = f;
             }
         });
 
