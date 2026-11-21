@@ -1,6 +1,8 @@
 package com.clauclient;
 
+import java.awt.image.BufferedImage;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.Gui;
@@ -10,6 +12,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemPotion;
@@ -17,12 +20,81 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class CosmeticEvents {
 
     public static final ResourceLocation SHIELD = new ResourceLocation("clauclient", "textures/shield.png");
+    private static final ResourceLocation GLINT = new ResourceLocation("textures/misc/enchanted_item_glint.png");
     private static boolean texChecked, hasTex;
     private static boolean installed;
+
+    private static DynamicTexture glintTex;
+    private static BufferedImage glintOrig;
+    private static int glintKey = Integer.MIN_VALUE;
+    private static boolean glintFailed;
+    private int gt;
+
+    // ---------- Glint Colorize: cor do encantamento ----------
+    @SubscribeEvent
+    public void onGlintTick(TickEvent.ClientTickEvent e) {
+        if (e.phase != TickEvent.Phase.END || glintFailed) return;
+        gt++;
+        if (gt % 5 != 0) return;
+        Module m = ModuleManager.glint;
+        if (m == null) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.getTextureManager() == null) return;
+
+        boolean on = m.enabled && m.b("Colorir encantamento");
+        if (!on && glintTex == null) return;
+
+        int cr = (int) m.n("Encantamento R");
+        int cg = (int) m.n("Encantamento G");
+        int cb = (int) m.n("Encantamento B");
+        if (!on) {
+            cr = 128;
+            cg = 64;
+            cb = 204;
+        }
+        int key = (cr << 16) | (cg << 8) | cb;
+        boolean present = glintTex != null && mc.getTextureManager().getTexture(GLINT) == glintTex;
+        if (key == glintKey && present) return;
+
+        try {
+            if (glintOrig == null) {
+                java.io.InputStream in = mc.getResourceManager().getResource(GLINT).getInputStream();
+                glintOrig = ImageIO.read(in);
+                in.close();
+            }
+            int w = glintOrig.getWidth();
+            int h = glintOrig.getHeight();
+            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    int p = glintOrig.getRGB(x, y);
+                    int a = (p >>> 24) & 255;
+                    int r = Math.min(255, (p >> 16 & 255) * cr / 128);
+                    int g = Math.min(255, (p >> 8 & 255) * cg / 64);
+                    int b = Math.min(255, (p & 255) * cb / 204);
+                    img.setRGB(x, y, (a << 24) | (r << 16) | (g << 8) | b);
+                }
+            }
+            DynamicTexture nt = new DynamicTexture(img);
+            mc.getTextureManager().loadTexture(GLINT, nt);
+            if (glintTex != null && glintTex != nt) glintTex.deleteGlTexture();
+            glintTex = nt;
+            glintKey = key;
+            if (!on) {
+                glintTex = null;
+                glintKey = Integer.MIN_VALUE;
+            }
+        } catch (Exception ex) {
+            glintFailed = true;
+            System.out.println("[ClauClient] nao consegui colorir o brilho");
+            ex.printStackTrace();
+        }
+    }
 
     // ---------- Glint Colorize: slot da hotbar colorido ----------
     @SubscribeEvent
