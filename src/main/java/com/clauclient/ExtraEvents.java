@@ -16,8 +16,6 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
@@ -27,7 +25,6 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
-import net.minecraftforge.client.event.RenderBlockOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -48,33 +45,6 @@ public class ExtraEvents {
             return na.compareToIgnoreCase(nb);
         }
     };
-
-    // ---------- Render: esconder armor stands e mobs ----------
-    @SubscribeEvent
-    public void onLiving(RenderLivingEvent.Pre e) {
-        Module r = ModuleManager.render;
-        if (!r.enabled) return;
-        EntityLivingBase en = e.entity;
-        if (en instanceof EntityPlayer) return;
-        if (en instanceof EntityArmorStand) {
-            if (r.b("Esconder armor stands")) e.setCanceled(true);
-            return;
-        }
-        Minecraft mc = Minecraft.getMinecraft();
-        if (r.b("Esconder mobs longe") && mc.thePlayer != null) {
-            double lim = r.n("Distancia de mobs");
-            if (en.getDistanceSqToEntity(mc.thePlayer) > lim * lim) e.setCanceled(true);
-        }
-    }
-
-    // ---------- Render: sem fogo na tela ----------
-    @SubscribeEvent
-    public void onOverlay(RenderBlockOverlayEvent e) {
-        Module r = ModuleManager.render;
-        if (r.enabled && r.b("Sem fogo na tela") && e.overlayType == RenderBlockOverlayEvent.OverlayType.FIRE) {
-            e.setCanceled(true);
-        }
-    }
 
     // ---------- Block Overlay ----------
     @SubscribeEvent
@@ -326,4 +296,4 @@ public class ExtraEvents {
         }
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
-          }
+}
