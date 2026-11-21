@@ -3,10 +3,13 @@ package com.clauclient;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.item.ItemSword;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
     public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, chat, blockOv, nametag, tab;
+    public static Module effects, lazy, texfix, mem, reloadc;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -60,6 +63,7 @@ public class ModuleManager {
             Setting sneak = bool("Sneak suave", true);
             Setting vel = num("Velocidade do sneak", 8, 1, 30, 1);
             Setting a1 = bool("1.7 Blockhit", true);
+            Setting a1v = num("Velocidade do blockhit", 1.3, 1.0, 2.0, 0.1);
             Setting a2 = bool("1.7 Sword Animation", true);
             Setting a3 = bool("1.7 Rod Animation", true);
             Setting a4 = bool("1.7 Bow Animation", true);
@@ -75,6 +79,28 @@ public class ModuleManager {
             Setting b4 = bool("1.7 Place (breve)", false);
             Setting b5 = bool("1.7 Build (breve)", false);
             Setting b6 = bool("1.7 Debug (breve)", false);
+
+            float acc;
+
+            public void onTick() {
+                Minecraft mc = Minecraft.getMinecraft();
+                EntityPlayerSP p = mc.thePlayer;
+                if (p == null || !b("1.7 Blockhit")) {
+                    acc = 0f;
+                    return;
+                }
+                if (p.isUsingItem() && p.getHeldItem() != null
+                        && p.getHeldItem().getItem() instanceof ItemSword
+                        && p.isSwingInProgress) {
+                    acc += (float) (n("Velocidade do blockhit") - 1.0);
+                    while (acc >= 1f) {
+                        if (p.swingProgressInt < 5) p.swingProgressInt++;
+                        acc -= 1f;
+                    }
+                } else {
+                    acc = 0f;
+                }
+            }
         });
 
         crosshair = add(new Module("Crosshair") {
@@ -98,6 +124,55 @@ public class ModuleManager {
             public void onTick() {
                 Minecraft.getMinecraft().gameSettings.particleSetting = 2;
             }
+        });
+
+        lazy = add(new Module("Lazy Chunk Loading", true) {
+            Setting start = num("Distancia inicial", 2, 1, 6, 1);
+            Setting iv = num("Intervalo (s)", 2, 1, 10, 1);
+            public void onTick() {
+                Perf.lazyTick(Minecraft.getMinecraft(), this);
+            }
+            public void onDisable() {
+                Perf.lazyStop(Minecraft.getMinecraft());
+            }
+        });
+
+        texfix = add(new Module("Tex Fix", true) {
+            public void onTick() {
+                Perf.texFreeze(Minecraft.getMinecraft());
+            }
+        });
+
+        effects = add(new Module("Sem Efeitos", true) {
+            Setting arrows = bool("Sem flechas", true);
+            Setting body = bool("Sem flechas no corpo", true);
+            Setting pfire = bool("Sem fogo em jogadores", true);
+            Setting hfire = bool("Sem fogo na tela", true);
+            Setting ach = bool("Sem conquistas", true);
+            Setting leaves = bool("Folhas simples", false);
+            public void onTick() {
+                Perf.effectsTick(Minecraft.getMinecraft(), this);
+            }
+        });
+
+        mem = add(new Module("Limpar Memoria", true) {
+            Setting iv = num("Intervalo (min)", 5, 1, 30, 1);
+            Setting now = action("Limpar agora", new Runnable() {
+                public void run() {
+                    Perf.gc();
+                }
+            });
+            public void onTick() {
+                Perf.gcTick(Minecraft.getMinecraft(), this);
+            }
+        });
+
+        reloadc = add(new Module("Recarregar Chunk") {
+            Setting go = action("Recarregar agora", new Runnable() {
+                public void run() {
+                    Perf.reloadChunks(Minecraft.getMinecraft());
+                }
+            });
         });
 
         blockOv = add(new Module("Block Overlay") {
