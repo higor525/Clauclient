@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.InventoryEffectRenderer;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.item.ItemSword;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
@@ -20,7 +19,6 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -67,6 +65,7 @@ public class ClauClient {
         ClientRegistry.registerKeyBinding(perspKey);
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new MenuEvents());
+        MinecraftForge.EVENT_BUS.register(new ExtraEvents());
         Config.load();
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
@@ -178,17 +177,6 @@ public class ClauClient {
         if (oa.enabled && oa.b("No Inventory Move") && e.gui instanceof InventoryEffectRenderer) {
             fixInventory((GuiContainer) e.gui);
         }
-    }
-
-    @SubscribeEvent
-    public void onLiving(RenderLivingEvent.Pre e) {
-        Module c = ModuleManager.cull;
-        if (!c.enabled) return;
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null || e.entity == mc.thePlayer) return;
-        double d = e.entity.getDistanceSqToEntity(mc.thePlayer);
-        double lim = e.entity instanceof EntityArmorStand ? c.n("Distancia armor stand") : c.n("Distancia de entidades");
-        if (d > lim * lim) e.setCanceled(true);
     }
 
     @SubscribeEvent
