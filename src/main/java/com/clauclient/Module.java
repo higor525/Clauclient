@@ -55,8 +55,15 @@ public abstract class Module {
         return null;
     }
 
-    public boolean b(String n) { return get(n).bool; }
-    public double n(String n) { return get(n).num; }
+    public boolean b(String n) {
+        Setting s = get(n);
+        return s != null && s.bool;
+    }
+
+    public double n(String n) {
+        Setting s = get(n);
+        return s == null ? 0 : s.num;
+    }
 
     public void toggle() {
         enabled = !enabled;
