@@ -3,10 +3,11 @@ package com.clauclient;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.Display;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
-    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, chat;
+    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, chat, cull, fpsIdle, fastGfx;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -68,8 +69,7 @@ public class ModuleManager {
             Setting a7 = bool("1.7 Swing Animation", false);
             Setting a8 = bool("1.7 Item Held Animation", true);
             Setting a9 = bool("1.7 Item Update", true);
-            Setting a10 = bool("Left Hand Animation", false);
-            Setting a11 = bool("No Inventory Move", false);
+            Setting a11 = bool("No Inventory Move", true);
             Setting b1 = bool("1.7 Damage (breve)", false);
             Setting b2 = bool("1.7 Hearts (breve)", false);
             Setting b3 = bool("1.7 Glint (breve)", false);
@@ -113,6 +113,48 @@ public class ModuleManager {
                 if (mc.theWorld != null && b("Sem chuva")) {
                     mc.theWorld.setRainStrength(0f);
                     mc.theWorld.setThunderStrength(0f);
+                }
+            }
+        });
+
+        cull = add(new Module("Entity Culling", true) {
+            Setting dist = num("Distancia de entidades", 40, 10, 128, 2);
+            Setting stands = num("Distancia armor stand", 12, 4, 64, 2);
+        });
+
+        fastGfx = add(new Module("Graficos Rapidos", true) {
+            boolean done;
+            public void onEnable() {
+                done = false;
+            }
+            public void onTick() {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (done || mc.theWorld == null) return;
+                done = true;
+                boolean changed = mc.gameSettings.fancyGraphics || mc.gameSettings.ambientOcclusion != 0;
+                mc.gameSettings.fancyGraphics = false;
+                mc.gameSettings.ambientOcclusion = 0;
+                if (changed && mc.renderGlobal != null) mc.renderGlobal.loadRenderers();
+            }
+        });
+
+        fpsIdle = add(new Module("FPS Inativo") {
+            Setting lim = num("Limite inativo", 15, 5, 60, 5);
+            int saved = -1;
+            public void onTick() {
+                Minecraft mc = Minecraft.getMinecraft();
+                if (!Display.isActive()) {
+                    if (saved < 0) saved = mc.gameSettings.limitFramerate;
+                    mc.gameSettings.limitFramerate = (int) n("Limite inativo");
+                } else if (saved >= 0) {
+                    mc.gameSettings.limitFramerate = saved;
+                    saved = -1;
+                }
+            }
+            public void onDisable() {
+                if (saved >= 0) {
+                    Minecraft.getMinecraft().gameSettings.limitFramerate = saved;
+                    saved = -1;
                 }
             }
         });
