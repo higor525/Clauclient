@@ -3,11 +3,10 @@ package com.clauclient;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.Display;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
-    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, chat, cull, fpsIdle, fastGfx;
+    public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, optim, plus, chat, render, blockOv, nametag, tab;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -103,60 +102,79 @@ public class ModuleManager {
 
         optim = add(new Module("Otimizacao", true) {
             Setting shadows = bool("Sem sombra de entidades", true);
-            Setting weather = bool("Sem chuva", true);
-            Setting dist = num("Distancia de render", 5, 2, 16, 1);
             public void onTick() {
                 Minecraft mc = Minecraft.getMinecraft();
                 if (b("Sem sombra de entidades")) mc.gameSettings.entityShadows = false;
-                int d = (int) n("Distancia de render");
-                if (mc.gameSettings.renderDistanceChunks != d) mc.gameSettings.renderDistanceChunks = d;
-                if (mc.theWorld != null && b("Sem chuva")) {
-                    mc.theWorld.setRainStrength(0f);
-                    mc.theWorld.setThunderStrength(0f);
-                }
             }
         });
 
-        cull = add(new Module("Entity Culling", true) {
-            Setting dist = num("Distancia de entidades", 40, 10, 128, 2);
-            Setting stands = num("Distancia armor stand", 12, 4, 64, 2);
-        });
+        plus = add(new Module("Otimizacao Plus", true) {
+            Setting tex = bool("Congelar texturas", true);
+            Setting vs = bool("Vsync desligado", true);
+            Setting dyn = bool("Distancia dinamica", true);
+            Setting tgt = num("FPS alvo", 45, 20, 120, 5);
+            Setting dmin = num("Distancia minima", 3, 2, 8, 1);
+            Setting dmax = num("Distancia maxima", 6, 3, 16, 1);
+            Setting bob = bool("Sem view bobbing", false);
+            Setting mip = bool("Mipmap zero", false);
 
-        fastGfx = add(new Module("Graficos Rapidos", true) {
-            boolean done;
-            public void onEnable() {
-                done = false;
-            }
             public void onTick() {
                 Minecraft mc = Minecraft.getMinecraft();
-                if (done || mc.theWorld == null) return;
-                done = true;
-                boolean changed = mc.gameSettings.fancyGraphics || mc.gameSettings.ambientOcclusion != 0;
-                mc.gameSettings.fancyGraphics = false;
-                mc.gameSettings.ambientOcclusion = 0;
-                if (changed && mc.renderGlobal != null) mc.renderGlobal.loadRenderers();
+                if (b("Congelar texturas")) FpsBoost.freezeTextures(mc);
+                if (b("Vsync desligado")) FpsBoost.vsyncOff(mc);
+                if (b("Sem view bobbing")) mc.gameSettings.viewBobbing = false;
+                if (b("Mipmap zero")) FpsBoost.mipmapZero(mc);
+                if (b("Distancia dinamica")) {
+                    FpsBoost.dynamicDistance(mc, (int) n("Distancia minima"), (int) n("Distancia maxima"), (int) n("FPS alvo"));
+                }
             }
         });
 
-        fpsIdle = add(new Module("FPS Inativo") {
-            Setting lim = num("Limite inativo", 15, 5, 60, 5);
-            int saved = -1;
+        render = add(new Module("Render", true) {
+            Setting fire = bool("Sem fogo na tela", true);
+            Setting gfx = bool("Graficos rapidos", true);
+            Setting menus = bool("FPS baixo em menus", true);
+            Setting lim = num("Limite de FPS", 60, 30, 260, 10);
+            Setting stands = bool("Esconder armor stands", false);
+            Setting mobs = bool("Esconder mobs longe", false);
+            Setting md = num("Distancia de mobs", 24, 8, 64, 4);
+
             public void onTick() {
                 Minecraft mc = Minecraft.getMinecraft();
-                if (!Display.isActive()) {
-                    if (saved < 0) saved = mc.gameSettings.limitFramerate;
-                    mc.gameSettings.limitFramerate = (int) n("Limite inativo");
-                } else if (saved >= 0) {
-                    mc.gameSettings.limitFramerate = saved;
-                    saved = -1;
+                if (b("Graficos rapidos")) {
+                    mc.gameSettings.fancyGraphics = false;
+                    mc.gameSettings.ambientOcclusion = 0;
                 }
+                int f = (int) n("Limite de FPS");
+                if (b("FPS baixo em menus") && mc.currentScreen != null) f = Math.min(f, 30);
+                mc.gameSettings.limitFramerate = f;
             }
-            public void onDisable() {
-                if (saved >= 0) {
-                    Minecraft.getMinecraft().gameSettings.limitFramerate = saved;
-                    saved = -1;
-                }
-            }
+        });
+
+        blockOv = add(new Module("Block Overlay") {
+            Setting cor = num("Cor", 9, 0, 9, 1);
+            Setting fill = bool("Preenchimento", true);
+            Setting fo = num("Opacidade preenchimento", 0.25, 0.0, 1.0, 0.05);
+            Setting line = bool("Contorno", true);
+            Setting lo = num("Opacidade contorno", 1.0, 0.1, 1.0, 0.1);
+            Setting w = num("Espessura", 2, 1, 6, 1);
+        });
+
+        nametag = add(new Module("Nametag") {
+            Setting bg = bool("Fundo", true);
+            Setting cor = num("Cor do fundo", 8, 0, 9, 1);
+            Setting op = num("Opacidade do fundo", 0.25, 0.0, 1.0, 0.05);
+            Setting sh = bool("Sombra no texto", false);
+            Setting sc = num("Escala", 1.0, 0.5, 2.0, 0.1);
+            Setting hp = bool("Mostrar vida", false);
+            Setting self = bool("Mostrar propria (F5)", false);
+        });
+
+        tab = add(new Module("Tab Ping") {
+            Setting bg = bool("Fundo", true);
+            Setting op = num("Opacidade do fundo", 0.5, 0.0, 1.0, 0.05);
+            Setting ping = bool("Mostrar ping", true);
+            Setting heads = bool("Mostrar cabecas", true);
         });
 
         chat = add(new Module("Chat", true) {
@@ -169,6 +187,10 @@ public class ModuleManager {
             Setting always = bool("Sempre visivel", false);
             Setting time = bool("Horario", false);
         });
+
+        tab.enabled = false;
+        nametag.enabled = false;
+        blockOv.enabled = false;
 
         add(new TextHud("FPS", 4, 4) {
             public String getValue() {
