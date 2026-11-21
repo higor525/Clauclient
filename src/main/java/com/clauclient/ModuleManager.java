@@ -5,11 +5,12 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.item.ItemSword;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ModuleManager {
     public static final List<Module> modules = new ArrayList<Module>();
     public static Module sprint, fullbright, hitFix, hurt, zoom, persp, oldAnim, crosshair, sidebar, potion, noPart, chat, blockOv, nametag, tab;
-    public static Module effects, lazy, texfix, mem, reloadc;
+    public static Module effects, lazy, texfix, mem, reloadc, glint, shield;
 
     public static Module get(String name) {
         for (Module m : modules) {
@@ -175,6 +176,21 @@ public class ModuleManager {
             });
         });
 
+        glint = add(new Module("Glint Colorize", true) {
+            Setting op = num("Opacidade", 0.35, 0.1, 1.0, 0.05);
+            Setting pot = bool("Cor da pocao", true);
+            Setting fixo = num("Cor fixa", 9, 0, 9, 1);
+        });
+
+        shield = add(new Module("Escudo", true) {
+            Setting sc = num("Tamanho", 1.0, 0.5, 2.0, 0.1);
+            Setting oy = num("Posicao Y", 0, -4, 4, 0.5);
+            Setting oz = num("Posicao Z", 0, -3, 3, 0.5);
+            public void onTick() {
+                CosmeticEvents.installShield();
+            }
+        });
+
         blockOv = add(new Module("Block Overlay") {
             Setting cor = num("Cor", 9, 0, 9, 1);
             Setting fill = bool("Preenchimento", true);
@@ -238,5 +254,7 @@ public class ModuleManager {
                 return String.format("%.0f %.0f %.0f", mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
             }
         });
+
+        MinecraftForge.EVENT_BUS.register(new CosmeticEvents());
     }
 }
