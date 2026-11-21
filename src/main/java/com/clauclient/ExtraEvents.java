@@ -25,6 +25,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.client.event.RenderBlockOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -45,6 +46,33 @@ public class ExtraEvents {
             return na.compareToIgnoreCase(nb);
         }
     };
+
+    // ---------- Sem Efeitos: fogo em jogadores e flechas no corpo ----------
+    @SubscribeEvent
+    public void onLivingFx(RenderLivingEvent.Pre e) {
+        Module m = ModuleManager.effects;
+        if (m == null || !m.enabled || !(e.entity instanceof EntityPlayer)) return;
+        EntityPlayer p = (EntityPlayer) e.entity;
+        if (m.b("Sem fogo em jogadores")) {
+            byte b = p.getDataWatcher().getWatchableObjectByte(0);
+            if ((b & 1) != 0) {
+                p.getDataWatcher().updateObject(0, Byte.valueOf((byte) (b & ~1)));
+            }
+        }
+        if (m.b("Sem flechas no corpo") && p.getArrowCountInEntity() > 0) {
+            p.setArrowCountInEntity(0);
+        }
+    }
+
+    // ---------- Sem Efeitos: fogo na tela ----------
+    @SubscribeEvent
+    public void onOverlay(RenderBlockOverlayEvent e) {
+        Module m = ModuleManager.effects;
+        if (m != null && m.enabled && m.b("Sem fogo na tela")
+                && e.overlayType == RenderBlockOverlayEvent.OverlayType.FIRE) {
+            e.setCanceled(true);
+        }
+    }
 
     // ---------- Block Overlay ----------
     @SubscribeEvent
